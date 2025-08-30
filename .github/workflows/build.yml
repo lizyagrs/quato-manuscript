@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # container: ghcr.io/quarto-dev/quarto:latest
+    container: ghcr.io/quarto-dev/quarto:latest
 
     steps:
       - name: Checkout repository
@@ -18,41 +18,72 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          version: 1.4.552 # 使用具体版本
+    #   - name: Setup Quarto
+    #     uses: quarto-dev/quarto-actions/setup@v2
+    #     with:
+    #       version: 1.4.552 # 使用具体版本
 
     #     # 使用预装 Quarto 和 LaTeX 的环境
     # ✅ 1. 安装 TinyTeX
-      - name: Install TinyTeX with Retry
+      - name: Install TinyTeX with Strict Verification
         run: |
+            # 定义变量
+            TINYTEX_ROOT="$HOME/.quarto/tinytex"
+            TINYTEX_BIN="$TINYTEX_ROOT/bin/x86_64-linux"
+            EXPECTED_FILE="$TINYTEX_BIN/pdflatex"  # 关键可执行文件
+
+            # 清理可能的残留（可选）
+            # rm -rf "$TINYTEX_ROOT"
+
             MAX_RETRIES=3
             for i in $(seq 1 $MAX_RETRIES); do
             echo "Attempt $i to install TinyTeX..."
+
+            # 1. 尝试安装
             if quarto install tinytex; then
-                echo "✅ TinyTeX installed successfully."
+                echo "✅ quarto install tinytex command succeeded."
+            else
+                echo "❌ quarto install tinytex failed with exit code $?."
+                continue
+            fi
+
+            # 2. 严格验证：检查关键文件是否存在
+            if [ -f "$EXPECTED_FILE" ]; then
+                echo "✅ TinyTeX installation verified! pdflatex found at $EXPECTED_FILE"
+                # 安装成功，跳出循环
                 break
             else
-                echo "❌ Attempt $i failed."
-                if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Installation seems incomplete. $EXPECTED_FILE not found."
+                echo "Contents of $TINYTEX_ROOT (if exists):"
+                ls -la "$TINYTEX_ROOT" || echo "Directory not found."
+                echo "Contents of $TINYTEX_ROOT/bin (if exists):"
+                ls -la "$TINYTEX_ROOT/bin/" || true
+
+                # 清理不完整的安装，为下次重试做准备
+                if [ -d "$TINYTEX_ROOT" ]; then
+                echo "Cleaning up incomplete installation..."
+                rm -rf "$TINYTEX_ROOT"
+                fi
+
+                # 如果不是最后一次重试，等待后重试
+                if [ $i -lt $MAX_RETRIES ]; then
+                echo "Retrying in 45 seconds..."
+                sleep 45
+                else
                 echo "❌ Failed to install TinyTeX after $MAX_RETRIES attempts."
                 exit 1
                 fi
-                echo "Retrying in 30 seconds..."
-                sleep 30
             fi
             done
 
-            # 再次确认目录
-            if [ ! -d "$HOME/.quarto/tinytex/bin/x86_64-linux" ]; then
-            echo "❌ ERROR: TinyTeX installation incomplete!"
-            ls -la "$HOME/.quarto/tinytex/" || true
+            # 3. 只有安装并验证成功后，才添加到 PATH
+            if [ -f "$EXPECTED_FILE" ]; then
+            echo "Adding $TINYTEX_BIN to PATH"
+            echo "$TINYTEX_BIN" >> $GITHUB_PATH
+            else
+            echo "❌ Critical: TinyTeX verification failed at the end."
             exit 1
             fi
-
-            # 添加到 PATH
-            echo "$HOME/.quarto/tinytex/bin/x86_64-linux" >> $GITHUB_PATH
         shell: bash
 
     # ✅ 现在验证
