@@ -1,0 +1,39 @@
+project:
+  type: manuscript
+
+manuscript:
+  article: index.qmd
+
+format:
+  html:
+    comments:
+      hypothesis: true
+  docx: default
+  jats: default
+
+  # (other formats)
+  pdf: default
+
+# 交叉引用配置
+crossref:
+  fig-prefix: "图"
+  tbl-prefix: "表"
+  eq-prefix: "公式"
+  sec-prefix: "第"
+  chapters: true
+  appendix-delim: "A"
+
+# 引用设置
+bibliography: references.bib  # BibTeX格式参考文献
+csl: chinese-gb7714-2015-numeric.csl  # 国标引用格式
+cite-method: biblatex
+
+execute:
+  freeze: true
+  echo: false
+  warning: false
+  error: false
+  message: false
+  cache: true
+  cache-rebuild: false
+
