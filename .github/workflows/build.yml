@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/quarto-dev/quarto:latest
+    # container: ghcr.io/quarto-dev/quarto:latest
 
     steps:
       - name: Checkout repository
@@ -18,14 +18,20 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-    #   - name: Setup Quarto
-    #     uses: quarto-dev/quarto-actions/setup@v2
-    #     with:
-    #       version: 1.4.552 # 使用具体版本
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.4.552 # 使用具体版本
 
     #     # 使用预装 Quarto 和 LaTeX 的环境
     # ✅ 1. 安装 TinyTeX
-      - name: Install TinyTeX and configure path explicitly
+      - name: Install system dependencies
+        run: |
+          # 安装Perl模块管理器和所需模块
+          sudo apt-get update
+          sudo apt-get install -y perl-modules libfile-find-perl
+      
+      - name: Install and configure TinyTeX
         run: |
           # 安装TinyTeX
           quarto install tinytex --no-prompt
@@ -50,9 +56,7 @@ jobs:
           tlmgr update --self
           tlmgr install adjustbox caption enumitem fancyhdr float geometry graphicx hyperref lipsum lineno listings makecell multirow tabularx titlesec upquote xcolor
           # 中文字体支持
-          tlmgr install xeCJK fontspec ctex  
-
-    #    
+          tlmgr install xeCJK fontspec ctex
 
 
       - name: Render Manuscript (PDF, HTML, DOCX)
