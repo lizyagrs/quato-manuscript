@@ -23,18 +23,45 @@ jobs:
           version: 1.4.552 # 使用具体版本
 
       # 使用预装 Quarto 和 LaTeX 的环境
-      - name: Install Minimal LaTeX
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            texlive-latex-recommended \
-            texlive-fonts-recommended \
-            texlive-fonts-extra \
-            texlive-latex-extra \
-            texlive-bibtex-extra \
-            biber
 
-      - name: Render Manuscript (All Formats)
+    # 安装轻量级 MiKTeX
+      - name: Install MiKTeX
+        run: |
+          # 下载 MiKTeX minimal installer
+          wget https://miktex.org/download/ubuntu/pool/main/m/miktex/miktex_24.1-1_amd64.deb
+          # 安装
+          sudo dpkg -i miktex_24.1-1_amd64.deb || sudo apt-get install -f -y
+          # 清理
+          rm miktex_24.1-1_amd64.deb
+
+      # ⚙️ 配置 MiKTeX (关键步骤)
+      - name: Configure MiKTeX
+        run: |
+          # 设置为允许自动安装宏包 (核心！)
+          initexmf --set-config-value "[MPM]AllowInstaller=1"
+          # 或者使用更直接的命令行方式
+          mpm --admin --enable-installer
+
+          # (可选) 设置包数据库位置 (避免权限问题)
+          # initexmf --set-config-value "[Paths]CommonInstall=R:/miktex"
+
+          # (可选) 设置为用户模式安装 (通常 CI 环境推荐)
+          # initexmf --user-install=yes
+
+          # (可选) 更新 MiKTeX 数据库
+          initexmf --update-fndb
+
+      # 🧪 测试 MiKTeX (可选，用于调试)
+      - name: Test MiKTeX
+        run: |
+          miktex --version
+          # 尝试编译一个极简的 LaTeX 文件来触发首次宏包安装
+          echo '\documentclass{article}\begin{document}Hello\end{document}' > test.tex
+          pdflatex test.tex || echo "Initial compilation may fail, that's OK."
+          rm test.tex
+
+
+      - name: Render Manuscript (PDF, HTML, DOCX)
         run: quarto render
 
       # (可选) 部署 HTML 到 GitHub Pages
