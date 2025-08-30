@@ -26,23 +26,25 @@ jobs:
     #     # 使用预装 Quarto 和 LaTeX 的环境
     # ✅ 1. 安装 TinyTeX
       - name: Install TinyTeX
-        run: |
-          quarto install tinytex
+        run: quarto install tinytex
 
       # ✅ 2. 将 TinyTeX 添加到 PATH (关键步骤!)
       - name: Add TinyTeX to PATH
         run: |
-          # 将 TinyTeX 的 bin 目录添加到 GITHUB_PATH
-          echo "$HOME/.quarto/tinytex/bin/x86_64-linux" >> $GITHUB_PATH
-        # ⚠️ 重要：使用 bash 或 sh，确保路径扩展正确
+          TINYTEX_BIN="$HOME/.quarto/tinytex/bin/x86_64-linux"
+          if [ -d "$TINYTEX_BIN" ]; then
+          echo "✅ TinyTeX bin directory found: $TINYTEX_BIN"
+          echo "$TINYTEX_BIN" >> $GITHUB_PATH
+          else
+          echo "❌ ERROR: TinyTeX bin directory NOT found!"
+          ls -la "$HOME/.quarto/tinytex/bin/" || ls -la "$HOME/.quarto/tinytex/"
+          exit 1
+          fi
         shell: bash
 
-    # ✅ 3. 等待并验证 (可选但推荐)
-      - name: Wait and Verify pdflatex
+    # ✅ 现在验证
+      - name: Verify pdflatex
         run: |
-          # 等待几秒确保 PATH 生效
-          sleep 10
-          # 检查 pdflatex 是否可找到
           which pdflatex
           pdflatex --version
         shell: bash
