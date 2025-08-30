@@ -27,9 +27,12 @@ jobs:
     # ✅ 1. 安装 TinyTeX
       - name: Install system dependencies
         run: |
-          # 安装Perl模块管理器和所需模块
+          # 更新系统包并安装Perl相关工具
           sudo apt-get update
-          sudo apt-get install -y perl-modules libfile-find-perl
+          sudo apt-get install -y perl cpanminus
+          
+          # 使用cpanm安装File::Find模块
+          sudo cpanm File::Find
       
       - name: Install and configure TinyTeX
         run: |
