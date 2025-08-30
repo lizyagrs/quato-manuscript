@@ -1,4 +1,4 @@
-name: Render Quarto Manuscript
+name: Build Manuscript
 
 on:
   push:
@@ -7,53 +7,63 @@ on:
     branches: [ main ]
 
 jobs:
-  render:
+  build:
     runs-on: ubuntu-latest
-    
+    container: ghcr.io/quarto-dev/quarto:latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
         with:
-          quarto-version: 'latest'
-      
-      - name: Install and configure TinyTeX
+          persist-credentials: true
+          fetch-depth: 0
+
+    #   - name: Setup Quarto
+    #     uses: quarto-dev/quarto-actions/setup@v2
+    #     with:
+    #       version: 1.4.552 # 使用具体版本
+
+    #     # 使用预装 Quarto 和 LaTeX 的环境
+    # ✅ 1. 安装 TinyTeX
+      - name: Install TinyTeX and configure path explicitly
         run: |
-          # 安装 TinyTeX
+          # 安装TinyTeX
           quarto install tinytex --no-prompt
           
-          # 将 TinyTeX 添加到系统路径
-          echo "~/bin" >> $GITHUB_PATH
+          # 明确获取TinyTeX的安装路径
+          TINYTEX_PATH=$(find ~ -name "tlmgr" | sed 's/\/tlmgr//' | head -n 1)
           
-          # 验证 tlmgr 是否可用
+          # 确认路径并添加到环境变量
+          if [ -z "$TINYTEX_PATH" ]; then
+            echo "TinyTeX not found!"
+            exit 1
+          fi
+          echo "Found TinyTeX at: $TINYTEX_PATH"
+          echo "$TINYTEX_PATH" >> $GITHUB_PATH
+      
+      - name: Verify tlmgr installation
+        run: |
           tlmgr --version
       
-      - name: Install additional TeX packages
+      - name: Install required TeX packages
         run: |
-          # 先更新包管理器
           tlmgr update --self
-          
-          # 安装所需的 TeX 包
           tlmgr install adjustbox caption enumitem fancyhdr float geometry graphicx hyperref lipsum lineno listings makecell multirow tabularx titlesec upquote xcolor
-          
-          # 安装中文字体支持（如果需要）
-          tlmgr install xeCJK fontspec
-      
-      - name: Render all formats
+          # 中文字体支持
+          tlmgr install xeCJK fontspec ctex  
+
+    #    
+
+
+      - name: Render Manuscript (PDF, HTML, DOCX)
         run: quarto render
-      
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: manuscript-outputs
-          path: _public/
-      
-      - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v4
+
+      # (可选) 部署 HTML 到 GitHub Pages
+      - name: Deploy HTML to Pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_public
-    
+          publish_dir: ./ # 假设 HTML 输出在根目录
+          publish_branch: gh-pages
+          force_orphan: true
