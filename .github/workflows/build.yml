@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/quarto-dev/quarto:latest
+    # container: ghcr.io/quarto-dev/quarto:latest
 
     steps:
       - name: Checkout repository
@@ -18,33 +18,34 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-    #   - name: Setup Quarto
-    #     uses: quarto-dev/quarto-actions/setup@v2
-    #     with:
-    #       version: 1.4.552 # 使用具体版本
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.4.552 # 使用具体版本
 
     #     # 使用预装 Quarto 和 LaTeX 的环境
-    # ✅ 安装 TinyTeX (Quarto 官方推荐方式)
+    # ✅ 1. 安装 TinyTeX
       - name: Install TinyTeX
         run: |
-          # Quarto 自带安装 TinyTeX 的命令
           quarto install tinytex
-          # TinyTeX 默认允许自动安装缺失的宏包，非常适合 CI
 
-    # ⚠️ 等待 TinyTeX 安装完成并被识别
-      - name: Wait for TinyTeX to be ready
+      # ✅ 2. 将 TinyTeX 添加到 PATH (关键步骤!)
+      - name: Add TinyTeX to PATH
         run: |
-          # 将 TinyTeX 的 bin 目录添加到 PATH
+          # 将 TinyTeX 的 bin 目录添加到 GITHUB_PATH
           echo "$HOME/.quarto/tinytex/bin/x86_64-linux" >> $GITHUB_PATH
-          # 等待几秒确保环境变量生效
-          sleep 10
+        # ⚠️ 重要：使用 bash 或 sh，确保路径扩展正确
+        shell: bash
 
-    # ✅ 验证 LaTeX 安装
-      - name: Verify LaTeX installation
+    # ✅ 3. 等待并验证 (可选但推荐)
+      - name: Wait and Verify pdflatex
         run: |
-          # 检查 pdflatex 是否可用
+          # 等待几秒确保 PATH 生效
+          sleep 10
+          # 检查 pdflatex 是否可找到
           which pdflatex
           pdflatex --version
+        shell: bash
 
     #     # 安装轻量级 MiKTeX
     #   - name: Install MiKTeX
