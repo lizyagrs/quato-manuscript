@@ -43,15 +43,19 @@ jobs:
       
       - name: Configure CTAN mirror
         run: |
-          # 使用更新的CTAN镜像，避免版本不匹配
+          # 使用清华大学镜像，国内访问速度快且稳定
           tlmgr option repository https://mirrors.tuna.tsinghua.edu.cn/CTAN/systems/texlive/tlnet
           tlmgr update --self
       
       - name: Install required TeX packages
         run: |
-          tlmgr install adjustbox caption enumitem fancyhdr float geometry graphicx hyperref lipsum lineno listings makecell multirow tabularx titlesec upquote xcolor
-          # 中文字体支持
-          tlmgr install xeCJK fontspec ctex
+          # 移除肯定不存在的包，添加可能需要的替代包
+          tlmgr install adjustbox caption enumitem fancyhdr float geometry hyperref \
+            lipsum lineno listings makecell multirow titlesec upquote xcolor \
+            xeCJK fontspec ctex
+          
+          # 检查是否有必要的基础包组
+          tlmgr install collection-latexrecommended
 
 
       - name: Render Manuscript (PDF, HTML, DOCX)
