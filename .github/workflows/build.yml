@@ -27,36 +27,23 @@ jobs:
     # ✅ 1. 安装 TinyTeX
       - name: Install system dependencies
         run: |
-          # 更新系统包并安装Perl相关工具
           sudo apt-get update
           sudo apt-get install -y perl cpanminus
-          
-          # 使用cpanm安装File::Find模块
           sudo cpanm File::Find
       
       - name: Install and configure TinyTeX
         run: |
-          # 安装TinyTeX
           quarto install tinytex --no-prompt
-          
-          # 明确获取TinyTeX的安装路径
           TINYTEX_PATH=$(find ~ -name "tlmgr" | sed 's/\/tlmgr//' | head -n 1)
-          
-          # 确认路径并添加到环境变量
           if [ -z "$TINYTEX_PATH" ]; then
             echo "TinyTeX not found!"
             exit 1
           fi
-          echo "Found TinyTeX at: $TINYTEX_PATH"
           echo "$TINYTEX_PATH" >> $GITHUB_PATH
-      
-      - name: Verify tlmgr installation
-        run: |
-          tlmgr --version
       
       - name: Install required TeX packages
         run: |
-          tlmgr update --self
+          # 直接安装所需包，无需更新tlmgr（已确认是最新）
           tlmgr install adjustbox caption enumitem fancyhdr float geometry graphicx hyperref lipsum lineno listings makecell multirow tabularx titlesec upquote xcolor
           # 中文字体支持
           tlmgr install xeCJK fontspec ctex
