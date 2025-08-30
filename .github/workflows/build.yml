@@ -25,117 +25,13 @@ jobs:
 
     #     # 使用预装 Quarto 和 LaTeX 的环境
     # ✅ 1. 安装 TinyTeX
-      - name: Install TinyTeX with Strict Verification
+      - name: Install TeX dependencies
         run: |
-            # 定义变量
-            TINYTEX_ROOT="$HOME/.quarto/tinytex"
-            TINYTEX_BIN="$TINYTEX_ROOT/bin/x86_64-linux"
-            EXPECTED_FILE="$TINYTEX_BIN/pdflatex"  # 关键可执行文件
-
-            # 清理可能的残留（可选）
-            # rm -rf "$TINYTEX_ROOT"
-
-            MAX_RETRIES=3
-            for i in $(seq 1 $MAX_RETRIES); do
-            echo "Attempt $i to install TinyTeX..."
-
-            # 1. 尝试安装
-            if quarto install tinytex; then
-                echo "✅ quarto install tinytex command succeeded."
-            else
-                echo "❌ quarto install tinytex failed with exit code $?."
-                continue
-            fi
-
-            # 2. 严格验证：检查关键文件是否存在
-            if [ -f "$EXPECTED_FILE" ]; then
-                echo "✅ TinyTeX installation verified! pdflatex found at $EXPECTED_FILE"
-                # 安装成功，跳出循环
-                break
-            else
-                echo "❌ Installation seems incomplete. $EXPECTED_FILE not found."
-                echo "Contents of $TINYTEX_ROOT (if exists):"
-                ls -la "$TINYTEX_ROOT" || echo "Directory not found."
-                echo "Contents of $TINYTEX_ROOT/bin (if exists):"
-                ls -la "$TINYTEX_ROOT/bin/" || true
-
-                # 清理不完整的安装，为下次重试做准备
-                if [ -d "$TINYTEX_ROOT" ]; then
-                echo "Cleaning up incomplete installation..."
-                rm -rf "$TINYTEX_ROOT"
-                fi
-
-                # 如果不是最后一次重试，等待后重试
-                if [ $i -lt $MAX_RETRIES ]; then
-                echo "Retrying in 45 seconds..."
-                sleep 45
-                else
-                echo "❌ Failed to install TinyTeX after $MAX_RETRIES attempts."
-                exit 1
-                fi
-            fi
-            done
-
-            # 3. 只有安装并验证成功后，才添加到 PATH
-            if [ -f "$EXPECTED_FILE" ]; then
-            echo "Adding $TINYTEX_BIN to PATH"
-            echo "$TINYTEX_BIN" >> $GITHUB_PATH
-            else
-            echo "❌ Critical: TinyTeX verification failed at the end."
-            exit 1
-            fi
-        shell: bash
-
-    # ✅ 现在验证
-      - name: Verify LaTeX tools
-        run: |
-            which pdflatex || { echo "pdflatex not found"; exit 1; }
-            which xelatex  || { echo "xelatex not found"; exit 1; }
-            which lualatex || { echo "lualatex not found"; exit 1; }
-            pdflatex --version
-            xelatex --version
-        shell: bash
-
-    #     # 安装轻量级 MiKTeX
-    #   - name: Install MiKTeX
-    #     run: |
-    #       # 1. 下载并安装 MiKTeX GPG 密钥
-          
-    #       wget https://miktex.org/download/key -O- | sudo gpg --dearmor --yes --output /usr/share/keyrings/miktex.gpg
-    #       # 2. 添加 MiKTeX 软件源
-    #       echo "deb [arch=amd64 signed-by=/usr/share/keyrings/miktex.gpg] https://miktex.org/download/ubuntu focal universe" | sudo tee /etc/apt/sources.list.d/miktex.list          # 3. 更新软件包列表
-    #       sudo apt update
-    #       # 4. 安装 MiKTeX
-    #       sudo apt-get install -y miktex
-
-    #   # ⚙️ 配置 MiKTeX (关键步骤)
-    #   - name: Configure MiKTeX
-    #     run: |
-    #       # 设置为允许自动安装宏包 (核心！)
-    #       initexmf --set-config-value "[MPM]AllowInstaller=1"
-    #       # 或者使用更直接的命令行方式
-    #       mpm --admin --enable-installer
-
-    #       # (可选) 设置包数据库位置 (避免权限问题)
-    #       # initexmf --set-config-value "[Paths]CommonInstall=R:/miktex"
-
-    #       # (可选) 设置为用户模式安装 (通常 CI 环境推荐)
-    #       # initexmf --user-install=yes
-
-    #       # (可选) 更新 MiKTeX 数据库
-    #       initexmf --update-fndb
-
-    #   # 🧪 测试 MiKTeX (可选，用于调试)
-    #   - name: Test MiKTeX
-    #     run: |
-    #       miktex --version
-    #       # 尝试编译一个极简的 LaTeX 文件来触发首次宏包安装
-    #       echo '\documentclass{article}\begin{document}Hello\end{document}' > test.tex
-    #       pdflatex test.tex || echo "Initial compilation may fail, that's OK."
-    #       rm test.tex
-
-
-      - name: Render Manuscript (PDF, HTML, DOCX)
+          quarto install tinytex --no-prompt
+          # 安装额外的 TeX 包（按需添加）
+          tlmgr install adjustbox caption enumitem fancyhdr float geometry graphicx hyperref lipsum lineno listings makecell multirow tabularx titlesec upquote xcolor
+      
+      - name: Render all formats
         run: quarto render
 
       # (可选) 部署 HTML 到 GitHub Pages
