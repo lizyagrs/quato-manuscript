@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: quarto/quarto:latest
 
     steps:
       - name: Checkout repository
@@ -17,17 +18,15 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          version: 1.4.552 # 使用具体版本
+    #   - name: Setup Quarto
+    #     uses: quarto-dev/quarto-actions/setup@v2
+    #     with:
+    #       version: 1.4.552 # 使用具体版本
 
-      - name: Install LaTeX (for PDF)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y texlive-full
+      # 使用预装 Quarto 和 LaTeX 的环境
+    
 
-      - name: Render Manuscript (PDF, HTML, DOCX)
+      - name: Render Manuscript (All Formats)
         run: quarto render
 
       # (可选) 部署 HTML 到 GitHub Pages
