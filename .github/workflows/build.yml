@@ -44,7 +44,7 @@ jobs:
       - name: Configure CTAN mirror
         run: |
           # 使用更新的CTAN镜像，避免版本不匹配
-          tlmgr option repository https://mirror.ctan.org/systems/texlive/tlnet
+          tlmgr option repository https://mirrors.tuna.tsinghua.edu.cn/CTAN/systems/texlive/tlnet
           tlmgr update --self
       
       - name: Install required TeX packages
