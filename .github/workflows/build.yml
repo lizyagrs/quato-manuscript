@@ -24,6 +24,27 @@ jobs:
     #       version: 1.4.552 # 使用具体版本
 
     #     # 使用预装 Quarto 和 LaTeX 的环境
+    # ✅ 安装 TinyTeX (Quarto 官方推荐方式)
+      - name: Install TinyTeX
+        run: |
+          # Quarto 自带安装 TinyTeX 的命令
+          quarto install tinytex
+          # TinyTeX 默认允许自动安装缺失的宏包，非常适合 CI
+
+    # ⚠️ 等待 TinyTeX 安装完成并被识别
+      - name: Wait for TinyTeX to be ready
+        run: |
+          # 将 TinyTeX 的 bin 目录添加到 PATH
+          echo "$HOME/.quarto/tinytex/bin/x86_64-linux" >> $GITHUB_PATH
+          # 等待几秒确保环境变量生效
+          sleep 10
+
+    # ✅ 验证 LaTeX 安装
+      - name: Verify LaTeX installation
+        run: |
+          # 检查 pdflatex 是否可用
+          which pdflatex
+          pdflatex --version
 
     #     # 安装轻量级 MiKTeX
     #   - name: Install MiKTeX
