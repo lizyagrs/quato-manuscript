@@ -22,17 +22,20 @@ jobs:
         with:
           version: 1.4.552 # 使用具体版本
 
-      # 使用预装 Quarto 和 LaTeX 的环境
+        # 使用预装 Quarto 和 LaTeX 的环境
 
-    # 安装轻量级 MiKTeX
+        # 安装轻量级 MiKTeX
       - name: Install MiKTeX
         run: |
-          # 下载 MiKTeX minimal installer
-          wget https://miktex.org/download/ubuntu/pool/main/m/miktex/miktex_24.1-1_amd64.deb
-          # 安装
-          sudo dpkg -i miktex_24.1-1_amd64.deb || sudo apt-get install -f -y
-          # 清理
-          rm miktex_24.1-1_amd64.deb
+          # 1. 下载并安装 MiKTeX GPG 密钥
+          
+          wget https://miktex.org/download/key -O- | sudo gpg --dearmor --yes --output /usr/share/keyrings/miktex.gpg
+          # 2. 添加 MiKTeX 软件源
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/miktex.gpg] https://miktex.org/download/ubuntu jammy universe" | sudo tee /etc/apt/sources.list.d/miktex.list
+          # 3. 更新软件包列表
+          sudo apt update
+          # 4. 安装 MiKTeX
+          sudo apt-get install -y miktex
 
       # ⚙️ 配置 MiKTeX (关键步骤)
       - name: Configure MiKTeX
