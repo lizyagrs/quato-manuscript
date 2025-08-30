@@ -41,9 +41,14 @@ jobs:
           fi
           echo "$TINYTEX_PATH" >> $GITHUB_PATH
       
+      - name: Configure CTAN mirror
+        run: |
+          # 使用更新的CTAN镜像，避免版本不匹配
+          tlmgr option repository https://mirror.ctan.org/systems/texlive/tlnet
+          tlmgr update --self
+      
       - name: Install required TeX packages
         run: |
-          # 直接安装所需包，无需更新tlmgr（已确认是最新）
           tlmgr install adjustbox caption enumitem fancyhdr float geometry graphicx hyperref lipsum lineno listings makecell multirow tabularx titlesec upquote xcolor
           # 中文字体支持
           tlmgr install xeCJK fontspec ctex
