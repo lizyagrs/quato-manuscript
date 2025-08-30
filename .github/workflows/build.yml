@@ -1,0 +1,41 @@
+name: Build Manuscript
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.4.552 # 使用具体版本
+
+      - name: Install LaTeX (for PDF)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-full
+
+      - name: Render Manuscript (PDF, HTML, DOCX)
+        run: quarto render
+
+      # (可选) 部署 HTML 到 GitHub Pages
+      - name: Deploy HTML to Pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./ # 假设 HTML 输出在根目录
+          publish_branch: gh-pages
+          force_orphan: true
