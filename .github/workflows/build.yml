@@ -8,7 +8,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container: ghcr.io/quarto-dev/quarto:latest
 
     steps:
       - name: Checkout repository
@@ -17,50 +18,50 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          version: 1.4.552 # 使用具体版本
+    #   - name: Setup Quarto
+    #     uses: quarto-dev/quarto-actions/setup@v2
+    #     with:
+    #       version: 1.4.552 # 使用具体版本
 
-        # 使用预装 Quarto 和 LaTeX 的环境
+    #     # 使用预装 Quarto 和 LaTeX 的环境
 
-        # 安装轻量级 MiKTeX
-      - name: Install MiKTeX
-        run: |
-          # 1. 下载并安装 MiKTeX GPG 密钥
+    #     # 安装轻量级 MiKTeX
+    #   - name: Install MiKTeX
+    #     run: |
+    #       # 1. 下载并安装 MiKTeX GPG 密钥
           
-          wget https://miktex.org/download/key -O- | sudo gpg --dearmor --yes --output /usr/share/keyrings/miktex.gpg
-          # 2. 添加 MiKTeX 软件源
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/miktex.gpg] https://miktex.org/download/ubuntu focal universe" | sudo tee /etc/apt/sources.list.d/miktex.list          # 3. 更新软件包列表
-          sudo apt update
-          # 4. 安装 MiKTeX
-          sudo apt-get install -y miktex
+    #       wget https://miktex.org/download/key -O- | sudo gpg --dearmor --yes --output /usr/share/keyrings/miktex.gpg
+    #       # 2. 添加 MiKTeX 软件源
+    #       echo "deb [arch=amd64 signed-by=/usr/share/keyrings/miktex.gpg] https://miktex.org/download/ubuntu focal universe" | sudo tee /etc/apt/sources.list.d/miktex.list          # 3. 更新软件包列表
+    #       sudo apt update
+    #       # 4. 安装 MiKTeX
+    #       sudo apt-get install -y miktex
 
-      # ⚙️ 配置 MiKTeX (关键步骤)
-      - name: Configure MiKTeX
-        run: |
-          # 设置为允许自动安装宏包 (核心！)
-          initexmf --set-config-value "[MPM]AllowInstaller=1"
-          # 或者使用更直接的命令行方式
-          mpm --admin --enable-installer
+    #   # ⚙️ 配置 MiKTeX (关键步骤)
+    #   - name: Configure MiKTeX
+    #     run: |
+    #       # 设置为允许自动安装宏包 (核心！)
+    #       initexmf --set-config-value "[MPM]AllowInstaller=1"
+    #       # 或者使用更直接的命令行方式
+    #       mpm --admin --enable-installer
 
-          # (可选) 设置包数据库位置 (避免权限问题)
-          # initexmf --set-config-value "[Paths]CommonInstall=R:/miktex"
+    #       # (可选) 设置包数据库位置 (避免权限问题)
+    #       # initexmf --set-config-value "[Paths]CommonInstall=R:/miktex"
 
-          # (可选) 设置为用户模式安装 (通常 CI 环境推荐)
-          # initexmf --user-install=yes
+    #       # (可选) 设置为用户模式安装 (通常 CI 环境推荐)
+    #       # initexmf --user-install=yes
 
-          # (可选) 更新 MiKTeX 数据库
-          initexmf --update-fndb
+    #       # (可选) 更新 MiKTeX 数据库
+    #       initexmf --update-fndb
 
-      # 🧪 测试 MiKTeX (可选，用于调试)
-      - name: Test MiKTeX
-        run: |
-          miktex --version
-          # 尝试编译一个极简的 LaTeX 文件来触发首次宏包安装
-          echo '\documentclass{article}\begin{document}Hello\end{document}' > test.tex
-          pdflatex test.tex || echo "Initial compilation may fail, that's OK."
-          rm test.tex
+    #   # 🧪 测试 MiKTeX (可选，用于调试)
+    #   - name: Test MiKTeX
+    #     run: |
+    #       miktex --version
+    #       # 尝试编译一个极简的 LaTeX 文件来触发首次宏包安装
+    #       echo '\documentclass{article}\begin{document}Hello\end{document}' > test.tex
+    #       pdflatex test.tex || echo "Initial compilation may fail, that's OK."
+    #       rm test.tex
 
 
       - name: Render Manuscript (PDF, HTML, DOCX)
