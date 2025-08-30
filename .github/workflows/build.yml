@@ -8,8 +8,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    container: quarto/quarto:latest
+    runs-on: ubuntu-latest
+    container: cristobal/latex-quarto:latest
 
     steps:
       - name: Checkout repository
@@ -23,8 +23,17 @@ jobs:
     #     with:
     #       version: 1.4.552 # 使用具体版本
 
-      # 使用预装 Quarto 和 LaTeX 的环境
-    
+    #   # 使用预装 Quarto 和 LaTeX 的环境
+    #   - name: Install Minimal LaTeX
+    #     run: |
+    #       sudo apt-get update
+    #       sudo apt-get install -y \
+    #         texlive-latex-recommended \
+    #         texlive-fonts-recommended \
+    #         texlive-fonts-extra \
+    #         texlive-latex-extra \
+    #         texlive-bibtex-extra \
+    #         biber
 
       - name: Render Manuscript (All Formats)
         run: quarto render
