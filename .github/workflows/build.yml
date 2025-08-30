@@ -1,4 +1,4 @@
-name: Build Manuscript
+name: Render Quarto Manuscript
 
 on:
   push:
@@ -7,39 +7,53 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  render:
     runs-on: ubuntu-latest
-    container: ghcr.io/quarto-dev/quarto:latest
-
+    
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
         with:
-          persist-credentials: true
-          fetch-depth: 0
-
-    #   - name: Setup Quarto
-    #     uses: quarto-dev/quarto-actions/setup@v2
-    #     with:
-    #       version: 1.4.552 # 使用具体版本
-
-    #     # 使用预装 Quarto 和 LaTeX 的环境
-    # ✅ 1. 安装 TinyTeX
-      - name: Install TeX dependencies
+          quarto-version: 'latest'
+      
+      - name: Install and configure TinyTeX
         run: |
+          # 安装 TinyTeX
           quarto install tinytex --no-prompt
-          # 安装额外的 TeX 包（按需添加）
+          
+          # 将 TinyTeX 添加到系统路径
+          echo "~/bin" >> $GITHUB_PATH
+          
+          # 验证 tlmgr 是否可用
+          tlmgr --version
+      
+      - name: Install additional TeX packages
+        run: |
+          # 先更新包管理器
+          tlmgr update --self
+          
+          # 安装所需的 TeX 包
           tlmgr install adjustbox caption enumitem fancyhdr float geometry graphicx hyperref lipsum lineno listings makecell multirow tabularx titlesec upquote xcolor
+          
+          # 安装中文字体支持（如果需要）
+          tlmgr install xeCJK fontspec
       
       - name: Render all formats
         run: quarto render
-
-      # (可选) 部署 HTML 到 GitHub Pages
-      - name: Deploy HTML to Pages
-        if: success()
-        uses: peaceiris/actions-gh-pages@v3
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: manuscript-outputs
+          path: _public/
+      
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./ # 假设 HTML 输出在根目录
-          publish_branch: gh-pages
-          force_orphan: true
+          publish_dir: ./_public
+    
