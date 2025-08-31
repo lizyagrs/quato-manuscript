@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # container: ghcr.io/quarto-dev/quarto:latest
+    container: ghcr.mirrors.ustc.edu.cn/quarto-dev/quarto:latest
 
     steps:
       - name: Checkout repository
@@ -18,49 +18,10 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          version: 1.4.552 # 使用具体版本
-
-    #     # 使用预装 Quarto 和 LaTeX 的环境
-    # ✅ 1. 安装 TinyTeX
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y perl cpanminus
-          sudo cpanm File::Find
-      
-      - name: Install and configure TinyTeX
-        run: |
-          quarto install tinytex --no-prompt
-          TINYTEX_PATH=$(find ~ -name "tlmgr" | sed 's/\/tlmgr//' | head -n 1)
-          if [ -z "$TINYTEX_PATH" ]; then
-            echo "TinyTeX not found!"
-            exit 1
-          fi
-          echo "$TINYTEX_PATH" >> $GITHUB_PATH
-      
-      - name: Configure CTAN mirror
-        run: |
-          # 使用清华大学镜像，确保中文包的完整性
-          tlmgr option repository https://mirrors.tuna.tsinghua.edu.cn/CTAN/systems/texlive/tlnet
-          tlmgr update --self
-      
-      - name: Install required TeX packages
-        run: |
-          # 安装基础推荐包集合
-          tlmgr install collection-latexrecommended
-          
-          # 安装中文支持相关的包集合和组件
-          tlmgr install collection-latexextra
-          tlmgr install collection-xetex
-          tlmgr install ctex
-          tlmgr install fontspec
-          
-          # 安装其他所需包
-          tlmgr install adjustbox caption enumitem fancyhdr float geometry hyperref \
-            lipsum lineno listings makecell multirow titlesec upquote xcolor
+    #   - name: Setup Quarto
+    #     uses: quarto-dev/quarto-actions/setup@v2
+    #     with:
+    #       version: 1.4.552 # 使用具体版本
 
 
       - name: Render Manuscript (PDF, HTML, DOCX)
