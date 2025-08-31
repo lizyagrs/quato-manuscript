@@ -1,9 +1,7 @@
-name: Build Manuscript
+name: Build Manuscript (HTML & DOCX)
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 
 jobs:
@@ -22,71 +20,8 @@ jobs:
         with:
           version: 1.4.552 # 使用具体版本
 
-      - name: Install dependencies (fix lzma unzip error)
-        run: |
-          关键：安装 lzma 专用解压工具，解决格式识别问题
-          sudo apt-get update
-          sudo apt-get install -y lzma xz-utils
-          验证工具是否安装成功
-          lzma --version
-          xz --version
-
-      - name: Install MikTeX
-        run: |
-          curl -L -O https://miktex.org/download/ctan/systems/win32/miktex/setup/unx/miktex-portable-linux-x86_64.tar.lzma          
-          
-          if [ ! -f "miktex-portable-linux-x86_64.tar.lzma" ]; then
-            echo "MikTeX package download failed!"
-            exit 1
-          fi
-          
-          mkdir -p ~/miktex-portable
-          tar --lzma -xf miktex-portable-linux-x86_64.tar.lzma -C ~/miktex-portable
-          
-          # 初始化MikTeX
-          ~/miktex-portable/miktex/bin/x64/initexmf --set-config-value [MPM]AutoInstall=1
-          ~/miktex-portable/miktex/bin/x64/initexmf --update-fndb
-          echo "~/miktex-portable/miktex/bin/x64" >> $GITHUB_PATH
-          
-      - name: Configure MikTeX package repository
-        run: |
-          # 使用国内镜像加速
-          initexmf --set-repository=https://mirrors.tuna.tsinghua.edu.cn/CTAN/systems/win32/miktex/tm/packages/
-          initexmf --update-fndb
       
-      - name: Install required LaTeX packages
-        run: |
-          # 安装基础LaTeX包
-          mpm --install=adjustbox
-          mpm --install=caption
-          mpm --install=enumitem
-          mpm --install=fancyhdr
-          mpm --install=float
-          mpm --install=geometry
-          mpm --install=graphicx
-          mpm --install=hyperref
-          mpm --install=lineno
-          mpm --install=lipsum
-          mpm --install=listings
-          mpm --install=makecell
-          mpm --install=multirow
-          mpm --install=tabularx
-          mpm --install=titlesec
-          mpm --install=upquote
-          mpm --install=xcolor
-          
-          # 中文支持包
-          mpm --install=xeCJK
-          mpm --install=fontspec
-          mpm --install=ctex
-
-      - name: Verify MikTeX installation
-        run: |
-            验证 MikTeX 是否正常工作
-            pdflatex --version
-            xelatex --version # 验证 XeLaTeX（中文排版必需）
-
-      - name: Render Manuscript (PDF, HTML, DOCX)
+      - name: Render Manuscript ( HTML, DOCX)
         run: quarto render
 
       # (可选) 部署 HTML 到 GitHub Pages
@@ -95,6 +30,15 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./ # 假设 HTML 输出在根目录
+          publish_dir: ./_manuscript # 假设 HTML 输出在根目录
           publish_branch: gh-pages
           force_orphan: true
+
+    # 5. 上传 DOCX 文件作为构建产物（Artifact）
+      #    方便下载用于投稿或评审
+      - name: Upload DOCX Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: manuscript-word
+          path: ./_manuscript/*.docx
+          if-no-files-found: warn  # 如果没找到 DOCX，仅警告不失败
