@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: registry.cn-hangzhou.aliyuncs.com/ghcr-mirror/quarto-dev/quarto:latest
 
     steps:
       - name: Checkout repository
