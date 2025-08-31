@@ -24,17 +24,13 @@ jobs:
 
       - name: Install MikTeX
         run: |
-          # 添加MikTeX仓库
-          echo "deb http://miktex.org/download/ubuntu focal universe" | sudo tee /etc/apt/sources.list.d/miktex.list
-          curl -fsSL https://miktex.org/download/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/miktex.gpg
-          
-          # 安装MikTeX
-          sudo apt-get update
-          sudo apt-get install -y miktex
+          curl -L -O https://miktex.org/download/ctan/systems/win32/miktex/setup/unx/miktex-portable-linux-x86_64.tar.lzma          
+          mkdir -p ~/miktex-portable
+          tar --lzma -xf miktex-portable-linux-x86_64.tar.lzma -C ~/miktex-portable
           
           # 初始化MikTeX
-          sudo miktexsetup --verbose finish
-          sudo initexmf --admin --set-config-value [MPM]AutoInstall=1
+          ~/miktex-portable/miktex/bin/x64/initexmf --set-config-value [MPM]AutoInstall=1
+          ~/miktex-portable/miktex/bin/x64/initexmf --update-fndb
       
       - name: Configure MikTeX package repository
         run: |
@@ -67,6 +63,12 @@ jobs:
           mpm --install=xeCJK
           mpm --install=fontspec
           mpm --install=ctex
+
+      - name: Verify MikTeX installation
+        run: |
+            验证 MikTeX 是否正常工作
+            pdflatex --version
+            xelatex --version # 验证 XeLaTeX（中文排版必需）
 
       - name: Render Manuscript (PDF, HTML, DOCX)
         run: quarto render
