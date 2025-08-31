@@ -22,16 +22,32 @@ jobs:
         with:
           version: 1.4.552 # 使用具体版本
 
+      - name: Install dependencies (fix lzma unzip error)
+        run: |
+          关键：安装 lzma 专用解压工具，解决格式识别问题
+          sudo apt-get update
+          sudo apt-get install -y lzma xz-utils
+          验证工具是否安装成功
+          lzma --version
+          xz --version
+
       - name: Install MikTeX
         run: |
           curl -L -O https://miktex.org/download/ctan/systems/win32/miktex/setup/unx/miktex-portable-linux-x86_64.tar.lzma          
+          
+          if [ ! -f "miktex-portable-linux-x86_64.tar.lzma" ]; then
+            echo "MikTeX package download failed!"
+            exit 1
+          fi
+          
           mkdir -p ~/miktex-portable
           tar --lzma -xf miktex-portable-linux-x86_64.tar.lzma -C ~/miktex-portable
           
           # 初始化MikTeX
           ~/miktex-portable/miktex/bin/x64/initexmf --set-config-value [MPM]AutoInstall=1
           ~/miktex-portable/miktex/bin/x64/initexmf --update-fndb
-      
+          echo "~/miktex-portable/miktex/bin/x64" >> $GITHUB_PATH
+          
       - name: Configure MikTeX package repository
         run: |
           # 使用国内镜像加速
